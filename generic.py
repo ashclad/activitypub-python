@@ -5,6 +5,7 @@ from re import search as match
 
 # internal modules
 import config as conf
+import validap as vap
 from custerr import *
 
 class ObjectFreezer(object):
@@ -41,6 +42,7 @@ class APObject(object):
 
     self.possible_attrs = [
       'content',
+      'contentMap',
       'context',
       'id',
       'type',
@@ -95,16 +97,56 @@ class APObject(object):
           setattr(self, key, new_dict[key])
         break
 
-class Link:
-  possible_attrs = []
+class Link(object):
+  def __init__(self, href, rel):
+    if isinstance(href, str):
+      if urlvalidate(href):
+        self.href = href
 
-  def __init__(self):
-    raise NotImplementedError()
+    if isinstance(rel, (list,str)):
+      self.rel = rel
+    
+    self.possible_attrs = [
+      'href',
+      'rel',
+      'mediaType',
+      'name',
+      'hreflang',
+      'height',
+      'width',
+      'preview'
+    ]
+
+  def __setattr__(self, k, v):
+    if k in self.possible_attrs:
+      if isinstance(v, APObject):
+        object.__setattr__(self, k, v)
+      else:
+        raise TypeConstraintError(nameof(v), APObject)
+    else:
+      raise UnallowableAttributeError(k)
+
+  def drop(self, targetstruct = 'json'):
+    for allowable in conf.allowed_exports:
+      if match(allowable, targetstruct) is not None:
+        conf.allowed_exports[allowable]['dump'](vars(self))
+        break
+
+  def load(self, data, sourcestruct = 'json'):
+    for allowable in conf.allowed_exports:
+      if match(allowable, sourcestruct) is not None and isinstance(data, str):
+        new_dict = conf.allowed_exports[allowable]['load'](data)
+
+        for key in new_dict:
+          setattr(self, key, new_dict[key])
+        break
 
 class Activity(APObject):
   def __init__(self, cntxt, identi, actr, obj):
     super().__init__(cntxt, identi)
     self.possible_attrs += [
+      'actor',
+      'object',
       'target',
       'result',
       'origin',
@@ -117,6 +159,7 @@ class Collection(APObject):
   def __init__(self, cntxt, identi, items):
     super().__init__(cntxt, identi)
     self.possible_attrs += [
+      'items',
       'first',
       'current',
       'last'
@@ -129,10 +172,19 @@ class OrderedCollection(Collection):
     super().__init__(cntxt, identi, items)
     self.orderedItems = self.items
 
-class CollectionPage:
-  def __init__(self):
-    raise NotImplementedError()
+class CollectionPage(Collection):
+  def __init__(self, cntxt, identi, items, memberof):
+    super().__init__(cntxt, identi, items)
+    self.possible_attrs += [
+      'partOf',
+      'next',
+      'prev'
+    ]
+    self.partOf = memberof
 
-class OrderedCollectionPage:
-  def __init__(self):
-    raise NotImplementedError()
+class OrderedCollectionPage(CollectionPage):
+  def __init__(self, cntxt, identi, items, memberof, start):
+    super().__init__(cntxt, identi, items, memberof)
+
+    if isinstance(start, int):
+      self.startIndex = start
