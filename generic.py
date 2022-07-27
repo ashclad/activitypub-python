@@ -5,8 +5,8 @@ from re import search as match
 
 # internal modules
 import config as conf
-import validap as vap
 from custerr import *
+from validap import *
 
 class ObjectFreezer(object):
   __freeze = False
@@ -73,9 +73,16 @@ class APObject(object):
       'duration'
     ]
 
+  @createValidator
+  def chkapValidity(data):
+    if isinstance(data, (dict,str,list,APObject)):
+      return True
+    else:
+      return False
+
   def __setattr__(self, k, v):
     if k in self.possible_attrs:
-      if isinstance(v, APObject):
+      if self.chkapValidity(v):
         object.__setattr__(self, k, v)
       else:
         raise TypeConstraintError(nameof(v), APObject)
@@ -117,9 +124,16 @@ class Link(object):
       'preview'
     ]
 
+  @createValidator
+  def chkapValidity(data):
+    if isinstance(data, (dict,str,list,APObject)):
+      return True
+    else:
+      return False
+
   def __setattr__(self, k, v):
     if k in self.possible_attrs:
-      if isinstance(v, APObject):
+      if self.chkapValidity(v):
         object.__setattr__(self, k, v)
       else:
         raise TypeConstraintError(nameof(v), APObject)
