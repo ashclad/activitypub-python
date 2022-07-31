@@ -13,18 +13,22 @@ class TypeConstraintError(TypeError):
       type_required = type_required.__name__
 
     self.message = str(var_entered) + ' is constrained to type ' + type_required
-    super().__init__(message)
+    super().__init__(self.message)
 
 class UnallowableAttributeError(ValueError):
   def __init__(self, val):
     self.message = '"' + val + '" is not an allowed attribute'
-    super().__init__(message)
+    super().__init__(self.message)
 
 class UnmutableAttributeError(AttributeError):
   def __init__(self, msg = 'New attribute cannot be created'):
-    self.message = msg
-    super().__init__(message)
+    super().__init__(msg)
 
 class IllegalMethodError(NotImplementedError):
   def __init__(self, msg = 'This method call is illegal'):
-    self.message = msg
+    super().__init__(msg)
+
+class InvalidXSDError(ValueError):
+  def __init__(self, var_entered):
+    self.message = '"' + str(var_entered) + '" is not formatted as valid XSD data type'
+    super().__init__(self.message)
