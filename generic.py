@@ -151,30 +151,38 @@ class Link(object):
         break
 
 class Activity(APObject):
-  def __init__(self, cntxt, identi, actr, obj, result = None):
+  def __init__(self, cntxt, identi, actr, obj = None, result = None):
     super().__init__(cntxt, identi)
 
-    if isinstance(actr, APObject):
+    oftype = (APObject, Link)
+    if isinstance(actr, oftype):
       self.actor = actr
     elif isinstance(actr, str):
       if validate.url(actr):
         self.actor = actr
     else:
-      raise TypeConstraintError(nameof(actr), (APObject, str))
+      raise TypeConstraintError(nameof(actr), (*oftype, str))
 
-    if isinstance(obj, APObject):
-      self.object = obj
-    elif isinstance(obj, str):
-      if validate.url(obj):
+    if obj is not None:
+      if isinstance(obj, oftype):
         self.object = obj
-    else:
-      raise TypeConstraintError(nameof(obj), (APObject, str))
+      elif isinstance(obj, str):
+        if validate.url(obj):
+          self.object = obj
+      else:
+        raise TypeConstraintError(nameof(obj), (*oftype, str))
 
     if result is not None:
-      if isinstance(result, (APObject,list,dict,str)):
+      if isinstance(result, (*oftype, str)):
+        self.result = result
+      elif isinstance(result, list):
+        for r in result:
+          if not isinstance(r, oftype):
+            raise TypeConstraintError(nameof(r), oftype)
+
         self.result = result
       else:
-        raise TypeConstraintError(nameof(result), (APObject,list,dict,str))
+        raise TypeConstraintError(nameof(result), (*oftype, list, str))
 
     self.possible_attrs += [
       'actor',
@@ -184,6 +192,16 @@ class Activity(APObject):
       'origin',
       'instrument'
     ]
+
+class IntransitiveActivity(Activity):
+  def __init__(self, cntxt, identi, actr, target, result = None, obj = None):
+    super().__init__(cntxt, identi, actr, obj, result)
+    delattr(self, 'obj')
+
+    if isinstance(target, (list,dict,str,APObject)):
+      self.target = target
+    else:
+      raise TypeConstraintError(nameof(target), (list,dict,str,APObject))
 
 class Collection(APObject):
   def __init__(self, cntxt, identi, items):
