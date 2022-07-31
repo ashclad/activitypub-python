@@ -31,11 +31,10 @@ class Article(APObject):
       self.attributedTo = by
     elif isinstance(by, list):
       for auth in by:
-        if isinstance(auth, oftype):
-          self.attributedTo = by
-          break
-        else:
+        if not isinstance(auth, oftype):
           raise TypeConstraintError(nameof(auth), oftype)
+      
+      self.attributedTo = by
         
 
 class Event(APObject):
@@ -87,17 +86,16 @@ class Document(APObject):
         self.url = url
     elif isinstance(url, list):
       for lnk in url:
-        if isinstance(lnk, Link):
-          self.url = url
-          break
-        elif isinstance(lnk, str):
-          if validate.url(lnk):
-            self.url = url
-            break
-          else:
-            raise ValueError('Invalid URI link')
-        else:
+        if not isinstance(lnk, Link):
           raise TypeConstraintError(nameof(lnk), (Link, str))
+        
+        if not isinstance(lnk, str):
+          raise TypeConstraintError(nameof(lnk), (Link, str))
+        else:
+          if not validate.url(lnk):
+            raise ValueError('Invalid URI link')
+          
+      self.url = url
     elif isinstance(url, Link):
       self.url = url
     else:
@@ -138,7 +136,6 @@ class Profile(APObject):
       raise TypeConstraintError(nameof(summ), str)
 
     oftype = (Link, Group, Application, Organization, Person, Service)
-    
     if isinstance(about, oftype):
       self.describes = about
     else:
@@ -178,10 +175,10 @@ class Place(APObject):
     elif isinstance(name, dict):
       self.nameMap = {}
       for k in name:
-        if lang.tag_is_valid(k):
-          self.nameMap[k] = name[k]
-        else:
+        if not lang.tag_is_valid(k):
           raise ValueError('Invalid language code')
+      
+      self.nameMap[k] = name[k]
     else:
       raise TypeConstraintError(nameof(name), (str, dict))
 
