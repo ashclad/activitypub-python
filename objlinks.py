@@ -26,11 +26,11 @@ class Event(APObject):
   def __init__(self, cntxt, identi, start, end):
     super().__init__(cntxt, identi)
 
-    if isinstance(content, str):
+    if isinstance(start, str):
       # TODO: add regex pattern check for xsd:dateTime format
       self.startTime = start
 
-    if isinstance(content, str):
+    if isinstance(end, str):
       # TODO: add regex pattern check for xsd:dateTime format
       self.endTime = end
 
