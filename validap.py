@@ -1,5 +1,3 @@
-from validators import url as urlvalidate
-
 def createValidator(vfunc):
   def subfunc(*args):
     if len(args) > 3 or len(args) == 0:
