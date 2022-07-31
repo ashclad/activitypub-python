@@ -38,6 +38,7 @@ class APObject(object):
       'attributeTo',
       'audience',
       'name',
+      'nameMap',
       'endTime',
       'startTime',
       'generator',
