@@ -1,5 +1,5 @@
 # external modules
-from validators import url as urlvalidate
+from validators import url as validate
 from varname import nameof
 from re import search as match
 
@@ -33,7 +33,7 @@ class APObject(object):
     if isinstance(identi, int):
       self.id = identi
     elif isinstance(identi, str):
-      if urlvalidate(identi):
+      if validate.url(identi):
         self.id = identi
     else:
       raise TypeConstraintError(nameof(identi), (int,str))
@@ -89,13 +89,13 @@ class APObject(object):
     else:
       raise UnallowableAttributeError(k)
 
-  def drop(self, targetstruct = 'json'):
+  def drop(self, targetstruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
     for allowable in conf.allowed_exports:
       if match(allowable, targetstruct) is not None:
         conf.allowed_exports[allowable]['dump'](vars(self))
         break
 
-  def load(self, data, sourcestruct = 'json'):
+  def load(self, data, sourcestruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
     for allowable in conf.allowed_exports:
       if match(allowable, sourcestruct) is not None and isinstance(data, str):
         new_dict = conf.allowed_exports[allowable]['load'](data)
@@ -107,7 +107,7 @@ class APObject(object):
 class Link(object):
   def __init__(self, href, rel):
     if isinstance(href, str):
-      if urlvalidate(href):
+      if validate.url(href):
         self.href = href
 
     if isinstance(rel, (list,str)):
