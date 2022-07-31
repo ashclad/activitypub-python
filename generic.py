@@ -8,21 +8,6 @@ import config as conf
 from custerr import *
 from validap import *
 
-class ObjectFreezer(object):
-  __freeze = False
-
-  def __setattr__(self, k, v):
-    if self.__freeze and not hasattr(self, k):
-      raise UnmutableAttributeError()
-    else:
-      object.__setattr__(self, k, v)
-
-class sourceContent(ObjectFreezer):
-  def __init__(self, cnt, mtype):
-    self.content = cnt
-    self.mediaType = mtype
-    self.__freeze = True
-
 class APObject(object):
   def __init__(self, cntxt, identi):
     if isinstance(cntxt, (list,dict,str)):
@@ -105,13 +90,22 @@ class APObject(object):
         break
 
 class Link(object):
-  def __init__(self, href, rel):
+  def __init__(self, href, rel, w = None, h = None):
     if isinstance(href, str):
       if validate.url(href):
         self.href = href
+      else:
+        raise ValueError('Invalid URI link')
+    else:
+      raise TypeConstraintError(nameof(href), str)
 
     if isinstance(rel, (list,str)):
       self.rel = rel
+
+    if h is not None and w is not None:
+      if isinstance(w, int) and isinstance(h, int):
+        self.width = w
+        self.height = h
     
     self.possible_attrs = [
       'href',
@@ -156,8 +150,31 @@ class Link(object):
         break
 
 class Activity(APObject):
-  def __init__(self, cntxt, identi, actr, obj):
+  def __init__(self, cntxt, identi, actr, obj, result = None):
     super().__init__(cntxt, identi)
+
+    if isinstance(actr, APObject):
+      self.actor = actr
+    elif isinstance(actr, str):
+      if validate.url(actr):
+        self.actor = actr
+    else:
+      raise TypeConstraintError(nameof(actr), (APObject, str))
+
+    if isinstance(obj, APObject):
+      self.object = obj
+    elif isinstance(obj, str):
+      if validate.url(obj):
+        self.object = obj
+    else:
+      raise TypeConstraintError(nameof(obj), (APObject, str))
+
+    if result is not None:
+      if isinstance(result, (APObject,list,dict,str)):
+        self.result = result
+      else:
+        raise TypeConstraintError(nameof(result), (APObject,list,dict,str))
+
     self.possible_attrs += [
       'actor',
       'object',
@@ -166,39 +183,66 @@ class Activity(APObject):
       'origin',
       'instrument'
     ]
-    self.actor = actr
-    self.object = obj
 
 class Collection(APObject):
   def __init__(self, cntxt, identi, items):
     super().__init__(cntxt, identi)
+
+    if isinstance(items, list):
+      for i in items:
+        if not isinstance(i, (dict,APObject)):
+          raise TypeConstraintError(nameof(i), dict)
+
+      self.items = items
+    else:
+      raise TypeConstraintError(nameof(items), list)
+
+    self.totalItems = len(items)
+
     self.possible_attrs += [
       'items',
       'first',
       'current',
       'last'
     ]
-    self.items = items
-    self.totalItems = len(items)
 
 class OrderedCollection(Collection):
   def __init__(self, cntxt, identi, items):
     super().__init__(cntxt, identi, items)
     self.orderedItems = self.items
+    delattr(self, 'items')
 
 class CollectionPage(Collection):
-  def __init__(self, cntxt, identi, items, memberof):
+  def __init__(self, cntxt, identi, items, memberof, nxt = None, prev = None):
     super().__init__(cntxt, identi, items)
+
+    if isinstance(memberof, (Link, Collection)):
+      self.partOf = memberof
+    else:
+      raise TypeConstraintError(nameof(memberof), (Link, Collection))
+
+    if nxt is not None:
+      if isinstance(nxt, (CollectionPage, Link)):
+        self.next = nxt
+      else:
+        raise TypeConstraintError(nameof(nxt), (CollectionPage, Link))
+
+    if prev is not None:
+      if isinstance(prev, (CollectionPage, Link)):
+        self.next = prev
+      else:
+        raise TypeConstraintError(nameof(nxt), (CollectionPage, Link))
+    
     self.possible_attrs += [
       'partOf',
       'next',
       'prev'
     ]
-    self.partOf = memberof
 
-class OrderedCollectionPage(CollectionPage):
-  def __init__(self, cntxt, identi, items, memberof, start):
-    super().__init__(cntxt, identi, items, memberof)
+class OrderedCollectionPage(OrderedCollection,CollectionPage):
+  def __init__(self, cntxt, identi, items, memberof, start, nxt = None, prev = None):
+    OrderedCollection.__init__(self, cntxt, identi, items)
+    CollectionPage.__init__(self, cntxt, identi, items, memberof, nxt, prev)
 
     if isinstance(start, int):
       self.startIndex = start
