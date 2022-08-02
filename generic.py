@@ -194,14 +194,15 @@ class Activity(APObject):
     ]
 
 class IntransitiveActivity(Activity):
-  def __init__(self, cntxt, identi, actr, target, result = None, obj = None):
+  def __init__(self, cntxt, identi, actr, target = None, result = None, obj = None):
     super().__init__(cntxt, identi, actr, obj, result)
     delattr(self, 'obj')
 
-    if isinstance(target, (list,dict,str,APObject)):
-      self.target = target
-    else:
-      raise TypeConstraintError(nameof(target), (list,dict,str,APObject))
+    if target is not None:
+      if isinstance(target, (list,dict,str,APObject)):
+        self.target = target
+      else:
+        raise TypeConstraintError(nameof(target), (list,dict,str,APObject))
 
 class Collection(APObject):
   def __init__(self, cntxt, identi, items):
