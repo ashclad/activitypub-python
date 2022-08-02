@@ -298,6 +298,12 @@ class Question(IntransitiveActivity):
     else:
       self.closed = dt.datetime.now()
 
+    self.possible_attrs += [
+      'closed',
+      'oneOf',
+      'anyOf'
+    ]
+
   def close(self, dtstr = None):
     if dtstr is None:
       self.closed = dt.datetime.now()
