@@ -2,16 +2,15 @@
 from validators import url as validate
 
 # internal modules
-from generic import Activity, IntransitiveActivity
-from actors import *
+from generic import Activity, IntransitiveActivity, Collection
+# from actors import *
 
 class Accept(Activity):
   def __init__(self, contxt, identi, actr, obj, target = None, result = None):
     super().__init__(cntxt, identi, actr, obj, result)
 
     if target is not None:
-      oftype = (Person, Group, Organization, Service)
-      if isinstance(target, oftype):
+      if isinstance(target, Collection):
         self.target = target
       elif isinstance(target, str):
         if validate.url(target):
@@ -20,28 +19,66 @@ class Accept(Activity):
           raise ValueError('Invalid URI link')
       elif isinstance(target, list):
         for t in target:
-          if not isinstance(t, (oftype, str)):
-            raise TypeConstraintError(nameof(t), (*oftype, str))
+          if not isinstance(t, (Collection, str)):
+            raise TypeConstraintError(nameof(t), (Collection, str))
 
           self.target = target
       else:
-        raise TypeConstraintError(nameof(target), (str, list, *oftype))
+        raise TypeConstraintError(nameof(target), (str, list, Collection))
 
 class TentativeAccept(Accept):
   def __init__(self, contxt, identi, actr, obj, target = None, result = None):
     super().__init__(cntxt, identi, actr, obj, target, result)
 
 class Add(Activity):
-  pass
+  def __init__(self, contxt, identi, actr, obj, target = None, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
+
+    if target is not None:
+      if isinstance(target, Collection):
+        self.target = target
+      elif isinstance(target, str):
+        if validate.url(target):
+          self.target = target
+        else:
+          raise ValueError('Invalid URI link')
+      elif isinstance(target, list):
+        for t in target:
+          if not isinstance(t, (Collection, str)):
+            raise TypeConstraintError(nameof(t), (Collection, str))
+
+          self.target = target
+      else:
+        raise TypeConstraintError(nameof(target), (str, list, Collection))
 
 class Create(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
 
 class Delete(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, origin = None, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
+
+    if origin is not None:
+      if isinstance(origin, Collection):
+        self.origin = origin
+      elif isinstance(origin, str):
+        if validate.url(origin):
+          self.origin = origin
+        else:
+          raise ValueError('Invalid URI link')
+      elif isinstance(origin, list):
+        for o in origin:
+          if not isinstance(o, (Collection, str)):
+            raise TypeConstraintError(nameof(o), (Collection, str))
+
+        self.target = target
+      else:
+        raise TypeConstraintError(nameof(origin), (str, list, Collection))
 
 class Follow(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
 
 class Ignore(Activity):
   def __init__(self, cntxt, identi, actr, obj, result = None):
@@ -52,23 +89,26 @@ class Block(Ignore):
     super().__init__(cntxt, identi, actr, obj, result)
 
 class Join(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
 
 class Leave(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
 
 class Like(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
 
 class Dislike(Activity):
-  pass
+  def __init__(self, cntxt, identi, actr, obj, result = None):
+    super().__init__(cntxt, identi, actr, obj, result)
 
 class Offer(Activity):
   def __init__(self, cntxt, identi, actr, obj, target, result = None):
     super().__init__(cntxt, identi, actr, obj, result)
 
-    oftype = (Person, Group, Organization, Service)
-    if isinstance(target, oftype):
+    if isinstance(target, Collection):
       self.target = target
     elif isinstance(target, str):
       if validate.url(target):
@@ -77,12 +117,12 @@ class Offer(Activity):
         raise ValueError('Invalid URI link')
     elif isinstance(target, list):
       for t in target:
-        if not isinstance(t, (oftype, str)):
-          raise TypeConstraintError(nameof(t), (*oftype, str))
+        if not isinstance(t, (Collection, str)):
+          raise TypeConstraintError(nameof(t), (Collection, str))
 
         self.target = target
     else:
-      raise TypeConstraintError(nameof(target), (str, list, *oftype))
+      raise TypeConstraintError(nameof(target), (str, list, Collection))
 
 class Invite(Offer):
   def __init__(self, cntxt, identi, actr, obj, target, result = None):
