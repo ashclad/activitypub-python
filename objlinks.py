@@ -8,6 +8,7 @@ import langcodes as lang
 # internal modules
 from generic import APObject, Link
 from actors import Group, Application, Organization, Person, Service
+from regxsd import xsd
 from custerr import *
 
 class Note(APObject):
@@ -42,9 +43,7 @@ class Event(APObject):
     super().__init__(cntxt, identi)
 
     if isinstance(start, str):
-      xsddtstr = '^(-)?[0-9]+\-[0-9]{1,2}\-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}Z?$'
-      
-      if match(start, xsddtstr) is not None:
+      if match(start, xsd['datetime']) is not None:
         self.startTime = start
       else:
         raise InvalidXSDError(nameof(start))
@@ -54,9 +53,7 @@ class Event(APObject):
       raise TypeConstraintError(nameof(start), (str, dt.datetime))
 
     if isinstance(end, str):
-      xsddtstr = '^(-)?[0-9]+\-[0-9]{1,2}\-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}Z?$'
-      
-      if match(end, xsddtstr) is not None:
+      if match(end, xsd['datetime']) is not None:
         self.endTime = end
       else:
         raise InvalidXSDError(nameof(end))
@@ -118,8 +115,7 @@ class Video(Document):
     super().__init__(cntxt, identi, name, url)
 
     if isinstance(dur, str):
-      xsddurstr = '^P([0-9]+Y)?([0-9]{1,2}M)?([0-9]{1,2}D)?(T([0-9]{1,2}H)?([0-9]{1,2}M)?([0-9]{1,2}S)?)?$'
-      if match(dur, xsddurstr) is not None:
+      if match(dur, xsd['duration']) is not None:
         self.duration = dur
       else:
         raise InvalidXSDError(nameof(dur))
@@ -230,8 +226,7 @@ class Tombstone(APObject):
       raise TypeConstraintError(nameof(former), APObject)
 
     if isinstance(deltime, str):
-      xsddtstr = '^(-)?[0-9]+\-[0-9]{1,2}\-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}Z?$'
-      if match(deltime, xsddtstr) is not None:
+      if match(deltime, xsd['datetime']) is not None:
         self.deleted = deltime
       else:
         raise InvalidXSDError(nameof(deltime))
