@@ -1,12 +1,20 @@
 # external modules
-from validators import url as validate
+from validators import url
 from varname import nameof
 from re import search as match
+import socket
 
 # internal modules
-import config as conf
+import parsers
 from custerr import *
 from validap import *
+
+@createValidator
+def chkapValidity(data):
+  if isinstance(data, (dict,str,list,APObject)):
+    return True
+  else:
+    return False
 
 class APObject(object):
   def __init__(self, cntxt, identi):
@@ -18,12 +26,18 @@ class APObject(object):
     if isinstance(identi, int):
       self.id = identi
     elif isinstance(identi, str):
-      if validate.url(identi):
+      if url(identi):
         self.id = identi
+      elif match('^\/[a-zA-Z0-9]+$', identi) is not None:
+        self.id = socket.getfqdn() + identi
+      else:
+        raise ValueError('Invalid URI link')
     else:
       raise TypeConstraintError(nameof(identi), (int,str))
 
     self.type = type(self).__name__
+
+    self.source = {}
 
     self.possible_attrs = [
       'content',
@@ -59,13 +73,6 @@ class APObject(object):
       'duration'
     ]
 
-  @createValidator
-  def chkapValidity(data):
-    if isinstance(data, (dict,str,list,APObject)):
-      return True
-    else:
-      return False
-
   def __setattr__(self, k, v):
     if k in self.possible_attrs:
       if self.chkapValidity(v):
@@ -75,25 +82,43 @@ class APObject(object):
     else:
       raise UnallowableAttributeError(k)
 
-  def drop(self, targetstruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
-    for allowable in conf.allowed_exports:
-      if match(allowable, targetstruct) is not None:
-        conf.allowed_exports[allowable]['dump'](vars(self))
+  def dump(self, targetstruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
+    for allowable in parsers.allowed_exports:
+      if match(targetstruct, allowable) is not None:
+        parsers.allowed_exports[allowable]['dump'](vars(self))
         break
 
   def load(self, data, sourcestruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
-    for allowable in conf.allowed_exports:
-      if match(allowable, sourcestruct) is not None and isinstance(data, str):
-        new_dict = conf.allowed_exports[allowable]['load'](data)
+    for allowable in parsers.allowed_exports:
+      if match(sourcestruct, allowable) is not None and isinstance(data, str):
+        new_dict = parsers.allowed_exports[allowable]['load'](data)
 
         for key in new_dict:
           setattr(self, key, new_dict[key])
         break
 
+  def source(self, content, mtype):
+    if isinstance(content, str):
+      self.source['content'] = content
+    else:
+      raise TypeConstraintError(nameof(content), str)
+    
+    if isinstance(mtype, str):
+      self.source['mediaType'] = mtype
+    else:
+      raise TypeConstraintError(nameof(content), str)
+
+@createValidator
+def chkapValidity(data):
+  if isinstance(data, (dict,str,list,APObject)):
+    return True
+  else:
+    return False
+
 class Link(object):
   def __init__(self, href, rel, w = None, h = None):
     if isinstance(href, str):
-      if validate.url(href):
+      if url(href):
         self.href = href
       else:
         raise ValueError('Invalid URI link')
@@ -119,13 +144,6 @@ class Link(object):
       'preview'
     ]
 
-  @createValidator
-  def chkapValidity(data):
-    if isinstance(data, (dict,str,list,APObject)):
-      return True
-    else:
-      return False
-
   def __setattr__(self, k, v):
     if k in self.possible_attrs:
       if self.chkapValidity(v):
@@ -135,16 +153,16 @@ class Link(object):
     else:
       raise UnallowableAttributeError(k)
 
-  def drop(self, targetstruct = 'json'):
-    for allowable in conf.allowed_exports:
-      if match(allowable, targetstruct) is not None:
-        conf.allowed_exports[allowable]['dump'](vars(self))
+  def dump(self, targetstruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
+    for allowable in parsers.allowed_exports:
+      if match(targetstruct, allowable) is not None:
+        parsers.allowed_exports[allowable]['dump'](vars(self))
         break
 
-  def load(self, data, sourcestruct = 'json'):
-    for allowable in conf.allowed_exports:
-      if match(allowable, sourcestruct) is not None and isinstance(data, str):
-        new_dict = conf.allowed_exports[allowable]['load'](data)
+  def load(self, data, sourcestruct = '^[Jj][Aa]?[Ss][Oo][Nn]$'):
+    for allowable in parsers.allowed_exports:
+      if match(sourcestruct, allowable) is not None and isinstance(data, str):
+        new_dict = parsers.allowed_exports[allowable]['load'](data)
 
         for key in new_dict:
           setattr(self, key, new_dict[key])
@@ -158,8 +176,12 @@ class Activity(APObject):
     if isinstance(actr, oftype):
       self.actor = actr
     elif isinstance(actr, str):
-      if validate.url(actr):
+      if url(actr):
         self.actor = actr
+      elif match('^\/[a-zA-Z0-9]+$', actr) is not None:
+        self.actor = socket.getfqdn() + actr
+      else:
+        raise ValueError('Invalid URI link')
     else:
       raise TypeConstraintError(nameof(actr), (*oftype, str))
 
@@ -167,8 +189,12 @@ class Activity(APObject):
       if isinstance(obj, oftype):
         self.object = obj
       elif isinstance(obj, str):
-        if validate.url(obj):
+        if url(obj):
           self.object = obj
+        elif match('^\/[a-zA-Z0-9]+$', obj) is not None:
+          self.object = socket.getfqdn() + obj
+        else:
+          raise ValueError('Invalid URI link')
       else:
         raise TypeConstraintError(nameof(obj), (*oftype, str))
 
