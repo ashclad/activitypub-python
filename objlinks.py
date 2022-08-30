@@ -43,7 +43,7 @@ class Event(APObject):
     super().__init__(cntxt, identi)
 
     if isinstance(start, str):
-      if match(start, xsd['datetime']) is not None:
+      if match(xsd['datetime'], start) is not None:
         self.startTime = start
       else:
         raise InvalidXSDError(nameof(start))
@@ -53,7 +53,7 @@ class Event(APObject):
       raise TypeConstraintError(nameof(start), (str, dt.datetime))
 
     if isinstance(end, str):
-      if match(end, xsd['datetime']) is not None:
+      if match(xsd['datetime'], end) is not None:
         self.endTime = end
       else:
         raise InvalidXSDError(nameof(end))
@@ -115,7 +115,7 @@ class Video(Document):
     super().__init__(cntxt, identi, name, url)
 
     if isinstance(dur, str):
-      if match(dur, xsd['duration']) is not None:
+      if match(xsd['duration'], dur) is not None:
         self.duration = dur
       else:
         raise InvalidXSDError(nameof(dur))
@@ -226,7 +226,7 @@ class Tombstone(APObject):
       raise TypeConstraintError(nameof(former), APObject)
 
     if isinstance(deltime, str):
-      if match(deltime, xsd['datetime']) is not None:
+      if match(xsd['datetime'], deltime) is not None:
         self.deleted = deltime
       else:
         raise InvalidXSDError(nameof(deltime))
