@@ -1,10 +1,10 @@
 # external modules
-from validators import url as validate
+from validators import url
 import datetime as dt
 from re import search as match
 
 # internal modules
-from generic import APObject, Activity, IntransitiveActivity, Collection, Profile
+from generic import APObject, Activity, IntransitiveActivity, Collection
 from actors import *
 
 actors_coll = (Group, Organization, Application, Service, Person)
@@ -18,7 +18,7 @@ class Accept(Activity):
       if isinstance(target, oftype):
         self.target = target
       elif isinstance(target, str):
-        if validate.url(target):
+        if url(target):
           self.target = target
         else:
           raise ValueError('Invalid URI link')
@@ -44,7 +44,7 @@ class Add(Activity):
       if isinstance(target, oftype):
         self.target = target
       elif isinstance(target, str):
-        if validate.url(target):
+        if url(target):
           self.target = target
         else:
           raise ValueError('Invalid URI link')
@@ -70,7 +70,7 @@ class Delete(Activity):
       if isinstance(origin, oftype):
         self.origin = origin
       elif isinstance(origin, str):
-        if validate.url(origin):
+        if url(origin):
           self.origin = origin
         else:
           raise ValueError('Invalid URI link')
@@ -119,7 +119,7 @@ class Offer(Activity):
     if isinstance(target, oftype):
       self.target = target
     elif isinstance(target, str):
-      if validate.url(target):
+      if url(target):
         self.target = target
       else:
         raise ValueError('Invalid URI link')
@@ -153,7 +153,7 @@ class Remove(Activity):
       if isinstance(origin, oftype):
         self.origin = origin
       elif isinstance(origin, str):
-        if validate.url(origin):
+        if url(origin):
           self.origin = origin
         else:
           raise ValueError('Invalid URI link')
@@ -194,7 +194,7 @@ class Move(Activity):
     if isinstance(origin, oftype):
       self.origin = origin
     elif isinstance(origin, str):
-      if validate.url(origin):
+      if url(origin):
         self.origin = origin
       else:
         raise ValueError('Invalid URI link')
@@ -210,7 +210,7 @@ class Move(Activity):
     if isinstance(target, oftype):
       self.target = target
     elif isinstance(target, str):
-      if validate.url(target):
+      if url(target):
         self.target = target
       else:
         raise ValueError('Invalid URI link')
@@ -231,7 +231,7 @@ class Announce(Activity):
     if isinstance(target, oftype):
       self.target = target
     elif isinstance(target, str):
-      if validate.url(target):
+      if url(target):
         self.target = target
       else:
         raise ValueError('Invalid URI link')
@@ -261,7 +261,7 @@ class Travel(IntransitiveActivity):
       if isinstance(origin, oftype):
         self.origin = origin
       elif isinstance(origin, str):
-        if validate.url(origin):
+        if url(origin):
           self.origin = origin
         else:
           raise ValueError('Invalid URI link')
@@ -308,7 +308,7 @@ class Question(IntransitiveActivity):
     if dtstr is None:
       self.closed = dt.datetime.now()
     else:
-      if match(dtstr, xsd['datetime']) is not None:
+      if match(xsd['datetime'], dtstr) is not None:
         self.closed = dtstr
       else:
         raise InvalidXSDError(nameof(dtstr))
